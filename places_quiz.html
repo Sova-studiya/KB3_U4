@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Places Quiz</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Comic Sans MS', cursive, sans-serif; background: #fff8e7; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+
+  h1 { color: #e07b00; font-size: 1.6em; margin-bottom: 10px; text-align: center; }
+
+  #hud { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 600px; margin-bottom: 10px; }
+
+  #lives { font-size: 1.4em; letter-spacing: 4px; }
+  #score-box { font-size: 1em; color: #555; font-weight: bold; }
+
+  #timer-bar-wrap { width: 100%; max-width: 600px; height: 14px; background: #ddd; border-radius: 8px; margin-bottom: 14px; overflow: hidden; }
+  #timer-bar { height: 100%; width: 100%; background: #4caf50; border-radius: 8px; transition: width 0.1s linear, background 0.3s; }
+
+  #definition { background: #fff; border: 3px solid #f0a500; border-radius: 16px; padding: 18px 22px; font-size: 1.15em; color: #333; text-align: center; max-width: 600px; width: 100%; margin-bottom: 18px; line-height: 1.5; }
+
+  #options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 600px; width: 100%; }
+
+  .opt { background: #fff; border: 3px solid #f0a500; border-radius: 14px; cursor: pointer; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8px; transition: transform 0.1s, border-color 0.2s; }
+  .opt:hover { transform: scale(1.03); border-color: #e07b00; }
+  .opt img { width: 140px; height: 140px; object-fit: contain; }
+  .opt span { font-size: 0.85em; color: #555; margin-top: 4px; display: none; }
+
+  .opt.correct { border-color: #4caf50; background: #e8f5e9; }
+  .opt.wrong { border-color: #e53935; background: #ffebee; }
+  .opt.reveal { border-color: #4caf50; background: #e8f5e9; }
+
+  #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 10; align-items: center; justify-content: center; }
+  #overlay.show { display: flex; }
+  #overlay-box { background: #fff; border-radius: 20px; padding: 30px 36px; text-align: center; max-width: 340px; width: 90%; }
+  #overlay-box h2 { font-size: 1.8em; margin-bottom: 10px; }
+  #overlay-box p { font-size: 1.1em; color: #444; margin-bottom: 20px; }
+  #overlay-box button { background: #f0a500; color: #fff; border: none; border-radius: 12px; padding: 12px 30px; font-size: 1.1em; cursor: pointer; font-family: inherit; }
+  #overlay-box button:hover { background: #e07b00; }
+
+  #feedback { min-height: 24px; font-size: 1em; font-weight: bold; text-align: center; margin-bottom: 6px; }
+  .fb-correct { color: #4caf50; }
+  .fb-wrong { color: #e53935; }
+</style>
+</head>
+<body>
+
+<h1>🏙️ Where is it?</h1>
+
+<div id="hud">
+  <div id="lives">❤️❤️❤️</div>
+  <div id="score-box">Score: <span id="score">0</span></div>
+</div>
+
+<div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+
+<div id="definition" id="def-text">Loading...</div>
+
+<div id="feedback"></div>
+
+<div id="options"></div>
+
+<div id="overlay">
+  <div id="overlay-box">
+    <h2 id="overlay-title"></h2>
+    <p id="overlay-msg"></p>
+    <button id="overlay-btn">Play again</button>
+  </div>
+</div>
+
+<script>
+const places = [
+  { name: "cafe",          file: "1.jpg",  def: "this is a place where we can sit and drink tea or coffee" },
+  { name: "park",          file: "2.jpg",  def: "this is a place where we can walk, play and enjoy nature" },
+  { name: "road",          file: "3.jpg",  def: "this is a place where cars and buses drive" },
+  { name: "building",      file: "4.jpg",  def: "this is a place where people live or work" },
+  { name: "bank",          file: "5.jpg",  def: "this is a place where people keep and change their money" },
+  { name: "bus station",   file: "6.jpg",  def: "this is a place where we can catch the bus" },
+  { name: "cinema",        file: "7.jpg",  def: "this is a place where we can watch new films and cartoons" },
+  { name: "hospital",      file: "8.jpg",  def: "this is a place where doctors help sick people" },
+  { name: "library",       file: "9.jpg",  def: "this is a place where we can read books and borrow them" },
+  { name: "market",        file: "10.jpg", def: "this is a place where people buy fresh fruits and vegetables" },
+  { name: "shop",          file: "11.jpg", def: "this is a place where we can buy things" },
+  { name: "sports centre", file: "12.jpg", def: "this is a place where we can play sports and exercise" },
+  { name: "supermarket",   file: "13.jpg", def: "this is a place where we can buy food and electronic and other things" },
+  { name: "swimming pool", file: "14.jpg", def: "this is a place where we can learn and practice swimming" },
+  { name: "zoo",           file: "15.jpg", def: "this is a place where we can see wild animals" },
+  { name: "school",        file: "16.jpg", def: "this is a place where children go to study and learn" },
+  { name: "bridge",        file: "17.jpg", def: "this is a place where we can walk or drive over a river" },
+  { name: "castle",        file: "18.jpg", def: "this is a place where kings and queens lived long ago" },
+  { name: "museum",        file: "19.jpg", def: "this is a place where we can look at old and interesting things" },
+  { name: "hotel",         file: "20.jpg", def: "this is a place where people stay when they travel" },
+  { name: "restaurant",    file: "21.jpg", def: "this is a place where we can eat food and have dinner" },
+  { name: "theatre",       file: "22.jpg", def: "this is a place where we can watch actors on a stage" },
+  { name: "mountain",      file: "23.jpg", def: "this is a place where we can go hiking and climbing" },
+  { name: "beach",         file: "24.jpg", def: "this is a place where we can swim in the sea and play in the sand" },
+];
+
+const IMG_PATH = "img/";
+const MAX_TIME = 10;
+const MAX_LIVES = 3;
+
+let queue, current, lives, score, timeLeft, timerInterval, answered, penalty;
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function init() {
+  queue = shuffle(places);
+  lives = MAX_LIVES;
+  score = 0;
+  penalty = 0;
+  updateHud();
+  document.getElementById("overlay").classList.remove("show");
+  nextQuestion();
+}
+
+function updateHud() {
+  document.getElementById("lives").textContent = "❤️".repeat(lives) + "🖤".repeat(MAX_LIVES - lives);
+  document.getElementById("score").textContent = score;
+}
+
+function nextQuestion() {
+  if (queue.length === 0) { endGame(true); return; }
+  answered = false;
+  penalty = 0;
+  current = queue.pop();
+
+  document.getElementById("definition").textContent = current.def;
+  document.getElementById("feedback").textContent = "";
+
+  // pick 3 wrong options
+  const others = shuffle(places.filter(p => p.file !== current.file)).slice(0, 3);
+  const opts = shuffle([current, ...others]);
+
+  const container = document.getElementById("options");
+  container.innerHTML = "";
+  opts.forEach(p => {
+    const btn = document.createElement("div");
+    btn.className = "opt";
+    btn.dataset.file = p.file;
+    const img = document.createElement("img");
+    img.src = IMG_PATH + p.file;
+    img.alt = p.name;
+    const lbl = document.createElement("span");
+    lbl.textContent = p.name;
+    btn.appendChild(img);
+    btn.appendChild(lbl);
+    btn.addEventListener("click", () => handleAnswer(btn, p));
+    container.appendChild(btn);
+  });
+
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = MAX_TIME;
+  updateBar();
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      updateBar();
+      clearInterval(timerInterval);
+      if (!answered) timeUp();
+    } else {
+      updateBar();
+    }
+  }, 100);
+}
+
+function updateBar() {
+  const bar = document.getElementById("timer-bar");
+  const pct = (timeLeft / MAX_TIME) * 100;
+  bar.style.width = pct + "%";
+  bar.style.background = pct > 50 ? "#4caf50" : pct > 25 ? "#ff9800" : "#e53935";
+}
+
+function handleAnswer(btn, chosen) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+
+  const correct = chosen.file === current.file;
+  // reveal labels
+  document.querySelectorAll(".opt span").forEach(s => s.style.display = "block");
+
+  if (correct) {
+    btn.classList.add("correct");
+    score++;
+    document.getElementById("feedback").innerHTML = '<span class="fb-correct">✅ Correct!</span>';
+  } else {
+    btn.classList.add("wrong");
+    lives--;
+    // highlight correct
+    document.querySelectorAll(".opt").forEach(b => {
+      if (b.dataset.file === current.file) b.classList.add("reveal");
+    });
+    document.getElementById("feedback").innerHTML = '<span class="fb-wrong">❌ Wrong! It\'s ' + current.name + '</span>';
+    // reduce time for next round
+    penalty = Math.min(penalty + 2, 7);
+  }
+
+  updateHud();
+  if (lives <= 0) { setTimeout(() => endGame(false), 1200); return; }
+  setTimeout(() => {
+    MAX_TIME_local = Math.max(3, MAX_TIME - penalty);
+    nextQuestion();
+  }, 1200);
+}
+
+function timeUp() {
+  answered = true;
+  lives--;
+  document.querySelectorAll(".opt span").forEach(s => s.style.display = "block");
+  document.querySelectorAll(".opt").forEach(b => {
+    if (b.dataset.file === current.file) b.classList.add("reveal");
+  });
+  document.getElementById("feedback").innerHTML = '<span class="fb-wrong">⏰ Time\'s up! It\'s ' + current.name + '</span>';
+  penalty = Math.min(penalty + 2, 7);
+  updateHud();
+  if (lives <= 0) { setTimeout(() => endGame(false), 1200); return; }
+  setTimeout(nextQuestion, 1400);
+}
+
+function endGame(win) {
+  clearInterval(timerInterval);
+  const ol = document.getElementById("overlay");
+  ol.classList.add("show");
+  document.getElementById("overlay-title").textContent = win ? "🎉 Well done!" : "💔 Game over!";
+  document.getElementById("overlay-msg").textContent = "Your score: " + score + " / " + places.length;
+  document.getElementById("overlay-btn").onclick = init;
+}
+
+// penalty carrier across rounds (simple approach)
+let MAX_TIME_local = MAX_TIME;
+
+init();
+</script>
+</body>
+</html>

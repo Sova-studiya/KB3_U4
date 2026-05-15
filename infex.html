@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Places — Menu</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Comic Sans MS',cursive;background:#fff8e7;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+
+h1{color:#e07b00;font-size:clamp(1.3em,5vw,2em);text-align:center;margin-bottom:6px;}
+.subtitle{color:#aaa;font-size:clamp(0.8em,2.5vw,0.95em);text-align:center;margin-bottom:36px;}
+
+.cards{display:flex;flex-direction:column;gap:16px;width:100%;max-width:480px;}
+
+.menu-card{display:flex;align-items:center;gap:18px;background:#fff;border:3px solid #f0a500;border-radius:20px;padding:18px 22px;text-decoration:none;color:#333;transition:transform .15s, box-shadow .15s;}
+.menu-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(240,165,0,.25);}
+
+.icon{font-size:clamp(2em,7vw,2.8em);flex-shrink:0;}
+
+.info{display:flex;flex-direction:column;gap:4px;}
+.info .title{font-size:clamp(1em,3.5vw,1.2em);font-weight:bold;color:#e07b00;}
+.info .desc{font-size:clamp(0.75em,2.3vw,0.88em);color:#777;line-height:1.4;}
+
+footer{margin-top:40px;font-size:0.78em;color:#ccc;}
+</style>
+</head>
+<body>
+
+<h1>🏙️ Places</h1>
+<p class="subtitle">Choose an activity</p>
+
+<div class="cards">
+
+  <a class="menu-card" href="flashcards.html">
+    <div class="icon">🃏</div>
+    <div class="info">
+      <div class="title">Flashcards</div>
+      <div class="desc">Learn the places with pictures and definitions. Auto-read included.</div>
+    </div>
+  </a>
+
+  <a class="menu-card" href="places_quiz.html">
+    <div class="icon">🖼️</div>
+    <div class="info">
+      <div class="title">Picture Quiz</div>
+      <div class="desc">Read the definition — pick the right picture. 10 seconds per question. 3 lives.</div>
+    </div>
+  </a>
+
+  <a class="menu-card" href="places_game.html">
+    <div class="icon">🔍</div>
+    <div class="info">
+      <div class="title">Question Game</div>
+      <div class="desc">Guess the place by asking questions — or complete the question yourself.</div>
+    </div>
+  </a>
+
+</div>
+
+<footer>Совёнок · Places · A1</footer>
+
+</body>
+</html>

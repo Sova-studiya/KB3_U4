@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Places Flashcards</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Comic Sans MS',cursive;background:#fff8e7;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px;}
+
+h1{color:#e07b00;font-size:clamp(1.2em,4vw,1.6em);margin:10px 0 16px;text-align:center;}
+
+#progress{color:#aaa;font-size:0.88em;margin-bottom:12px;}
+
+/* CARD */
+#card-wrap{perspective:1000px;width:min(92vw,420px);height:min(72vw,340px);cursor:pointer;margin-bottom:18px;}
+#card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease;}
+#card.flipped{transform:rotateY(180deg);}
+.face{position:absolute;inset:0;border-radius:20px;border:3px solid #f0a500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+#front{background:#fff;}
+#front img{width:clamp(100px,35vw,160px);height:clamp(100px,35vw,160px);object-fit:contain;margin-bottom:12px;}
+#front .place-name{font-size:clamp(1.1em,4vw,1.5em);color:#e07b00;font-weight:bold;text-align:center;}
+#back{background:#fff8e7;transform:rotateY(180deg);}
+#back .def{font-size:clamp(0.88em,3vw,1.05em);color:#333;text-align:center;line-height:1.6;}
+#back .place-name-back{font-size:clamp(0.95em,3.2vw,1.15em);color:#e07b00;font-weight:bold;margin-top:12px;}
+
+/* HINT */
+#hint{font-size:0.8em;color:#bbb;margin-bottom:14px;}
+
+/* CONTROLS */
+#controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+.ctrl-btn{padding:9px 20px;border-radius:20px;border:2px solid #f0a500;background:#fff;color:#e07b00;cursor:pointer;font-family:inherit;font-size:clamp(0.82em,2.5vw,0.95em);font-weight:bold;transition:all .2s;}
+.ctrl-btn:hover{background:#f0a500;color:#fff;}
+.ctrl-btn:disabled{opacity:.4;cursor:default;}
+#btn-speak{background:#f0a500;color:#fff;border-color:#f0a500;}
+#btn-speak:hover{background:#e07b00;}
+
+/* AUTO toggle */
+#auto-wrap{display:flex;align-items:center;gap:8px;font-size:0.88em;color:#666;margin-bottom:6px;}
+#auto-toggle{width:38px;height:22px;appearance:none;background:#ddd;border-radius:11px;position:relative;cursor:pointer;transition:background .2s;outline:none;}
+#auto-toggle:checked{background:#f0a500;}
+#auto-toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;}
+#auto-toggle:checked::after{left:19px;}
+</style>
+</head>
+<body>
+
+<h1>🏙️ Places Flashcards</h1>
+<div id="progress"></div>
+
+<div id="card-wrap" onclick="flipCard()">
+  <div id="card">
+    <div class="face" id="front">
+      <img id="card-img" src="" alt="">
+      <div class="place-name" id="card-name"></div>
+    </div>
+    <div class="face" id="back">
+      <div class="def" id="card-def"></div>
+      <div class="place-name-back" id="card-name-back"></div>
+    </div>
+  </div>
+</div>
+
+<div id="hint">👆 tap to flip</div>
+
+<div id="auto-wrap">
+  <input type="checkbox" id="auto-toggle" checked>
+  <label for="auto-toggle">Auto-read definition</label>
+</div>
+
+<div id="controls">
+  <button class="ctrl-btn" id="btn-prev" onclick="go(-1)">◀ Prev</button>
+  <button class="ctrl-btn" id="btn-speak" onclick="speak()">🔊 Read</button>
+  <button class="ctrl-btn" id="btn-next" onclick="go(1)">Next ▶</button>
+</div>
+<div id="controls">
+  <button class="ctrl-btn" onclick="reshuffle()">🔀 Shuffle</button>
+</div>
+
+<script>
+const IMG="img/";
+const raw=[
+  {name:"cafe",         file:"1.jpg",  def:"This is a place where we can sit and drink tea or coffee."},
+  {name:"restaurant",   file:"21.jpg", def:"This is a place where we can eat food and have dinner."},
+  {name:"library",      file:"9.jpg",  def:"This is a place where we can read books and borrow them."},
+  {name:"school",       file:"16.jpg", def:"This is a place where children go to study and learn."},
+  {name:"museum",       file:"19.jpg", def:"This is a place where we can look at old and interesting things."},
+  {name:"theatre",      file:"22.jpg", def:"This is a place where we can watch actors on a stage."},
+  {name:"park",         file:"2.jpg",  def:"This is a place where we can walk, play and enjoy nature."},
+  {name:"road",         file:"3.jpg",  def:"This is a place where cars and buses drive."},
+  {name:"beach",        file:"24.jpg", def:"This is a place where we can swim in the sea and play in the sand."},
+  {name:"mountain",     file:"23.jpg", def:"This is a place where we can go hiking and climbing."},
+  {name:"sports centre",file:"12.jpg", def:"This is a place where we can play sports and exercise."},
+  {name:"swimming pool",file:"14.jpg", def:"This is a place where we can learn and practice swimming."},
+  {name:"cinema",       file:"7.jpg",  def:"This is a place where we can watch new films and cartoons."},
+  {name:"hospital",     file:"8.jpg",  def:"This is a place where doctors help sick people."},
+  {name:"castle",       file:"18.jpg", def:"This is a place where kings and queens lived long ago."},
+  {name:"shop",         file:"11.jpg", def:"This is a place where we can buy things."},
+  {name:"market",       file:"10.jpg", def:"This is a place where people buy fresh fruits and vegetables."},
+  {name:"supermarket",  file:"13.jpg", def:"This is a place where we can buy food and electronic and other things."},
+  {name:"bus station",  file:"6.jpg",  def:"This is a place where we can catch the bus."},
+  {name:"zoo",          file:"15.jpg", def:"This is a place where we can see wild animals."},
+  {name:"bridge",       file:"17.jpg", def:"This is a place where we can walk or drive over a river."},
+  {name:"hotel",        file:"20.jpg", def:"This is a place where people stay when they travel."},
+  {name:"bank",         file:"5.jpg",  def:"This is a place where people keep and change their money."},
+  {name:"building",     file:"4.jpg",  def:"This is a place where people live or work."},
+];
+
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+let deck=shuffle([...raw]);
+let idx=0;
+let flipped=false;
+let speakTimer=null;
+
+function reshuffle(){deck=shuffle([...raw]);idx=0;showCard(false);}
+
+function showCard(doFlip){
+  flipped=false;
+  document.getElementById("card").classList.remove("flipped");
+  const c=deck[idx];
+  document.getElementById("card-img").src=IMG+c.file;
+  document.getElementById("card-name").textContent=c.name;
+  document.getElementById("card-def").textContent=c.def;
+  document.getElementById("card-name-back").textContent=c.name;
+  document.getElementById("progress").textContent=`${idx+1} / ${deck.length}`;
+  document.getElementById("btn-prev").disabled=idx===0;
+  document.getElementById("btn-next").disabled=idx===deck.length-1;
+  // speak name on front
+  clearTimeout(speakTimer);
+  speakName();
+}
+
+function flipCard(){
+  flipped=!flipped;
+  document.getElementById("card").classList.toggle("flipped",flipped);
+  clearTimeout(speakTimer);
+  if(flipped && document.getElementById("auto-toggle").checked){
+    speakTimer=setTimeout(()=>speak(),400);
+  } else if(!flipped){
+    speakName();
+  }
+}
+
+function go(dir){
+  idx=Math.max(0,Math.min(deck.length-1,idx+dir));
+  showCard(false);
+}
+
+function speakName(){
+  if(!window.speechSynthesis)return;
+  const c=deck[idx];
+  const u=new SpeechSynthesisUtterance(c.name);
+  u.lang="en-GB";u.rate=0.9;u.pitch=1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+function speak(){
+  if(!window.speechSynthesis)return;
+  const c=deck[idx];
+  const text=flipped?c.def:c.name;
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-GB";u.rate=flipped?0.85:0.9;u.pitch=1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+// keyboard support
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight")go(1);
+  else if(e.key==="ArrowLeft")go(-1);
+  else if(e.key===" "||e.key==="Enter"){e.preventDefault();flipCard();}
+});
+
+showCard(false);
+</script>
+</body>
+</html>
