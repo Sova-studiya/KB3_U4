@@ -3,408 +3,240 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Places Game</title>
+<title>Places Quiz</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Comic Sans MS',cursive;background:#fff8e7;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px 16px;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Comic Sans MS', cursive, sans-serif; background: #fff8e7; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
 
-h1{color:#e07b00;font-size:clamp(1.2em,4vw,1.7em);margin:8px 0 10px;text-align:center;}
+  h1 { color: #e07b00; font-size: 1.6em; margin-bottom: 10px; text-align: center; }
 
-/* HELP */
-#help-btn{padding:6px 16px;border-radius:20px;border:2px solid #f0a500;background:#fff;color:#e07b00;cursor:pointer;font-family:inherit;font-size:0.88em;font-weight:bold;margin-bottom:10px;}
-#help-box{display:none;max-width:680px;width:100%;background:#fff;border:3px solid #f0a500;border-radius:16px;padding:14px 18px;margin-bottom:12px;font-size:clamp(0.8em,2.5vw,0.93em);line-height:1.7;color:#333;}
+  #hud { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 600px; margin-bottom: 10px; }
 
-/* TABS */
-#tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;}
-.tab{padding:9px 16px;border-radius:20px;border:2px solid #f0a500;background:#fff;color:#e07b00;cursor:pointer;font-family:inherit;font-size:clamp(0.78em,2.5vw,0.95em);font-weight:bold;transition:all .2s;white-space:nowrap;}
-.tab.active{background:#f0a500;color:#fff;}
+  #lives { font-size: 1.4em; letter-spacing: 4px; }
+  #score-box { font-size: 1em; color: #555; font-weight: bold; }
 
-/* HUD */
-#hud{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:680px;margin-bottom:8px;}
-#lives{font-size:clamp(1em,3.5vw,1.3em);letter-spacing:3px;}
-#score-box{font-weight:bold;color:#555;font-size:clamp(0.85em,2.5vw,1em);}
+  #timer-bar-wrap { width: 100%; max-width: 600px; height: 14px; background: #ddd; border-radius: 8px; margin-bottom: 14px; overflow: hidden; }
+  #timer-bar { height: 100%; width: 100%; background: #4caf50; border-radius: 8px; transition: width 0.1s linear, background 0.3s; }
 
-/* TIMER */
-#timer-wrap{width:100%;max-width:680px;height:12px;background:#ddd;border-radius:8px;margin-bottom:10px;overflow:hidden;}
-#timer-bar{height:100%;width:100%;background:#4caf50;border-radius:8px;transition:width .1s linear,background .3s;}
+  #definition { background: #fff; border: 3px solid #f0a500; border-radius: 16px; padding: 18px 22px; font-size: 1.15em; color: #333; text-align: center; max-width: 600px; width: 100%; margin-bottom: 18px; line-height: 1.5; }
 
-#feedback{min-height:22px;font-weight:bold;text-align:center;margin-bottom:8px;font-size:clamp(0.85em,2.5vw,0.95em);}
-.fb-ok{color:#4caf50;} .fb-no{color:#e53935;}
+  #options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 600px; width: 100%; }
 
-/* CARD */
-.card{background:#fff;border:3px solid #f0a500;border-radius:16px;padding:14px 16px;width:100%;max-width:680px;margin-bottom:12px;text-align:center;}
+  .opt { background: #fff; border: 3px solid #f0a500; border-radius: 14px; cursor: pointer; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8px; transition: transform 0.1s, border-color 0.2s; }
+  .opt:hover { transform: scale(1.03); border-color: #e07b00; }
+  .opt img { width: clamp(120px, 38vw, 180px); height: clamp(120px, 38vw, 180px); object-fit: contain; }
+  .opt span { font-size: 0.85em; color: #555; margin-top: 4px; display: none; }
 
-/* MODE 1 */
-#m1-secret{font-size:2.2em;margin-bottom:6px;}
-#m1-history{min-height:48px;max-height:130px;overflow-y:auto;margin-bottom:10px;font-size:clamp(0.78em,2.3vw,0.9em);text-align:left;}
-#m1-history div{padding:3px 0;border-bottom:1px solid #f5e0b0;}
-.ans-yes{color:#4caf50;font-weight:bold;} .ans-no{color:#e53935;font-weight:bold;}
+  .opt.correct { border-color: #4caf50; background: #e8f5e9; }
+  .opt.wrong { border-color: #e53935; background: #ffebee; }
+  .opt.reveal { border-color: #4caf50; background: #e8f5e9; }
 
-#m1-structures{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px;}
-.str-btn{padding:8px 12px;border-radius:12px;border:2px solid #f0a500;background:#fff8e7;color:#333;cursor:pointer;font-family:inherit;font-size:clamp(0.75em,2.3vw,0.88em);transition:all .2s;line-height:1.3;}
-.str-btn:hover,.str-btn.selected{background:#f0a500;color:#fff;}
+  #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 10; align-items: center; justify-content: center; }
+  #overlay.show { display: flex; }
+  #overlay-box { background: #fff; border-radius: 20px; padding: 30px 36px; text-align: center; max-width: 340px; width: 90%; }
+  #overlay-box h2 { font-size: 1.8em; margin-bottom: 10px; }
+  #overlay-box p { font-size: 1.1em; color: #444; margin-bottom: 20px; }
+  #overlay-box button { background: #f0a500; color: #fff; border: none; border-radius: 12px; padding: 12px 30px; font-size: 1.1em; cursor: pointer; font-family: inherit; }
+  #overlay-box button:hover { background: #e07b00; }
 
-#m1-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:36px;margin-bottom:10px;}
-.chip{padding:6px 12px;border-radius:20px;border:2px solid #aaa;background:#fff;cursor:pointer;font-family:inherit;font-size:clamp(0.75em,2.3vw,0.88em);transition:all .2s;}
-.chip:hover{border-color:#f0a500;background:#fff8e7;}
-
-#m1-guess-btn{padding:8px 22px;background:#f0a500;color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:clamp(0.85em,2.5vw,1em);cursor:pointer;}
-#m1-guess-btn:hover{background:#e07b00;}
-
-/* guess grid — 3 cols desktop, 2 cols mobile */
-#m1-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
-@media(max-width:420px){#m1-grid{grid-template-columns:repeat(2,1fr);}}
-.g-opt{border:3px solid #f0a500;border-radius:12px;overflow:hidden;cursor:pointer;background:#fff;display:flex;align-items:center;justify-content:center;padding:6px;transition:transform .15s;}
-.g-opt:hover{transform:scale(1.04);}
-.g-opt img{width:clamp(70px,18vw,110px);height:clamp(70px,18vw,110px);object-fit:contain;}
-.g-opt.correct{border-color:#4caf50;background:#e8f5e9;}
-.g-opt.wrong{border-color:#e53935;background:#ffebee;}
-
-/* MODE 2 */
-/* desktop: image left, question+options right */
-#m2-inner{display:flex;gap:18px;align-items:flex-start;}
-#m2-left{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;}
-#m2-place-img{width:clamp(110px,22vw,160px);height:clamp(110px,22vw,160px);object-fit:contain;display:block;}
-#m2-progress{font-size:0.8em;color:#aaa;margin-top:6px;white-space:nowrap;}
-#m2-right{flex:1;display:flex;flex-direction:column;gap:10px;}
-#m2-question{font-size:clamp(0.88em,2.5vw,1.05em);color:#333;line-height:1.5;text-align:left;}
-#m2-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.m2-opt{padding:9px 10px;border:2px solid #f0a500;border-radius:12px;background:#fff;cursor:pointer;font-family:inherit;font-size:clamp(0.75em,2.2vw,0.9em);text-align:center;transition:all .15s;line-height:1.3;}
-.m2-opt:hover{background:#fff8e7;}
-.m2-opt.correct{border-color:#4caf50;background:#e8f5e9;color:#2e7d32;font-weight:bold;}
-.m2-opt.wrong{border-color:#e53935;background:#ffebee;}
-
-/* mobile: stack vertically */
-@media(max-width:500px){
-  #m2-inner{flex-direction:column;align-items:center;}
-  #m2-left{flex-direction:row;gap:12px;width:100%;justify-content:center;}
-  #m2-right{width:100%;}
-  #m2-question{text-align:center;}
-}
-
-/* OVERLAY */
-#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;align-items:center;justify-content:center;}
-#overlay.show{display:flex;}
-#obox{background:#fff;border-radius:20px;padding:26px 30px;text-align:center;max-width:320px;width:90%;}
-#obox h2{font-size:clamp(1.3em,5vw,1.8em);margin-bottom:8px;}
-#obox p{color:#555;margin-bottom:16px;font-size:clamp(0.9em,3vw,1em);}
-#obox button{background:#f0a500;color:#fff;border:none;border-radius:12px;padding:10px 26px;font-size:clamp(0.9em,3vw,1em);font-family:inherit;cursor:pointer;}
+  #feedback { min-height: 24px; font-size: 1em; font-weight: bold; text-align: center; margin-bottom: 6px; }
+  .fb-correct { color: #4caf50; }
+  .fb-wrong { color: #e53935; }
 </style>
 </head>
 <body>
 
-<h1>🏙️ Places Game</h1>
-
-<button id="help-btn" onclick="toggleHelp()">📖 Help</button>
-<div id="help-box">
-  <b style="color:#e07b00;">Когда какой вопрос задавать?</b><br><br>
-  <b>Can you … there?</b><br>
-  Спрашиваем о <b>действии</b> — что <i>можно делать</i> в этом месте.<br>
-  <span style="color:#888;">Can you <u>swim</u> there? → Yes! → It's a swimming pool.</span><br><br>
-  <b>Do you go there to … ?</b><br>
-  Спрашиваем о <b>цели</b> — <i>зачем</i> люди туда идут.<br>
-  <span style="color:#888;">Do you go there to <u>buy food</u>? → Yes! → Maybe a market or supermarket.</span><br><br>
-  <b>Are there … in this place?</b><br>
-  Спрашиваем о <b>людях или предметах</b> — что или кто там <i>есть</i>.<br>
-  <span style="color:#888;">Are there <u>doctors</u> in this place? → Yes! → It's a hospital.</span>
-</div>
-
-<div id="tabs">
-  <button class="tab active" onclick="switchMode(1)">🔍 Guess the place</button>
-  <button class="tab" onclick="switchMode(2)">❓ Ask me!</button>
-</div>
+<h1>🏙️ Where is it?</h1>
 
 <div id="hud">
-  <div id="lives"></div>
+  <div id="lives">❤️❤️❤️</div>
   <div id="score-box">Score: <span id="score">0</span></div>
 </div>
-<div id="timer-wrap" style="display:none"><div id="timer-bar"></div></div>
+
+<div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+
+<div id="definition" id="def-text">Loading...</div>
+
 <div id="feedback"></div>
 
-<!-- MODE 1 -->
-<div id="mode1">
-  <div class="card">
-    <div id="m1-secret">🔒</div>
-    <div id="m1-history"></div>
-    <div id="m1-structures"></div>
-    <div id="m1-chips"></div>
-    <button id="m1-guess-btn" onclick="showGuessGrid()">💡 I know!</button>
-  </div>
-  <div id="m1-grid-wrap" class="card" style="display:none">
-    <p style="margin-bottom:10px;font-size:clamp(0.88em,2.5vw,1em);">Which place is it?</p>
-    <div id="m1-grid"></div>
-  </div>
-</div>
-
-<!-- MODE 2 -->
-<div id="mode2" style="display:none">
-  <div class="card">
-    <div id="m2-inner">
-      <div id="m2-left">
-        <img id="m2-place-img" src="" alt="">
-        <div id="m2-progress"></div>
-      </div>
-      <div id="m2-right">
-        <div id="m2-question"></div>
-        <div id="m2-options"></div>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="options"></div>
 
 <div id="overlay">
-  <div id="obox">
-    <h2 id="otitle"></h2>
-    <p id="omsg"></p>
-    <button id="obtn">Play again</button>
+  <div id="overlay-box">
+    <h2 id="overlay-title"></h2>
+    <p id="overlay-msg"></p>
+    <button id="overlay-btn">Play again</button>
   </div>
 </div>
 
 <script>
-const IMG="img/";
-const places=[
-  {name:"cafe",file:"1.jpg"},{name:"park",file:"2.jpg"},{name:"road",file:"3.jpg"},
-  {name:"building",file:"4.jpg"},{name:"bank",file:"5.jpg"},{name:"bus station",file:"6.jpg"},
-  {name:"cinema",file:"7.jpg"},{name:"hospital",file:"8.jpg"},{name:"library",file:"9.jpg"},
-  {name:"market",file:"10.jpg"},{name:"shop",file:"11.jpg"},{name:"sports centre",file:"12.jpg"},
-  {name:"supermarket",file:"13.jpg"},{name:"swimming pool",file:"14.jpg"},{name:"zoo",file:"15.jpg"},
-  {name:"school",file:"16.jpg"},{name:"bridge",file:"17.jpg"},{name:"castle",file:"18.jpg"},
-  {name:"museum",file:"19.jpg"},{name:"hotel",file:"20.jpg"},{name:"restaurant",file:"21.jpg"},
-  {name:"theatre",file:"22.jpg"},{name:"mountain",file:"23.jpg"},{name:"beach",file:"24.jpg"},
+const places = [
+  { name: "cafe",          file: "1.jpg",  def: "this is a place where we can sit and drink tea or coffee" },
+  { name: "park",          file: "2.jpg",  def: "this is a place where we can walk, play and enjoy nature" },
+  { name: "road",          file: "3.jpg",  def: "this is a place where cars and buses drive" },
+  { name: "building",      file: "4.jpg",  def: "this is a place where people live or work" },
+  { name: "bank",          file: "5.jpg",  def: "this is a place where people keep and change their money" },
+  { name: "bus station",   file: "6.jpg",  def: "this is a place where we can catch the bus" },
+  { name: "cinema",        file: "7.jpg",  def: "this is a place where we can watch new films and cartoons" },
+  { name: "hospital",      file: "8.jpg",  def: "this is a place where doctors help sick people" },
+  { name: "library",       file: "9.jpg",  def: "this is a place where we can read books and borrow them" },
+  { name: "market",        file: "10.jpg", def: "this is a place where people buy fresh fruits and vegetables" },
+  { name: "shop",          file: "11.jpg", def: "this is a place where we can buy things" },
+  { name: "sports centre", file: "12.jpg", def: "this is a place where we can play sports and exercise" },
+  { name: "supermarket",   file: "13.jpg", def: "this is a place where we can buy food and electronic and other things" },
+  { name: "swimming pool", file: "14.jpg", def: "this is a place where we can learn and practice swimming" },
+  { name: "zoo",           file: "15.jpg", def: "this is a place where we can see wild animals" },
+  { name: "school",        file: "16.jpg", def: "this is a place where children go to study and learn" },
+  { name: "bridge",        file: "17.jpg", def: "this is a place where we can walk or drive over a river" },
+  { name: "castle",        file: "18.jpg", def: "this is a place where kings and queens lived long ago" },
+  { name: "museum",        file: "19.jpg", def: "this is a place where we can look at old and interesting things" },
+  { name: "hotel",         file: "20.jpg", def: "this is a place where people stay when they travel" },
+  { name: "restaurant",    file: "21.jpg", def: "this is a place where we can eat food and have dinner" },
+  { name: "theatre",       file: "22.jpg", def: "this is a place where we can watch actors on a stage" },
+  { name: "mountain",      file: "23.jpg", def: "this is a place where we can go hiking and climbing" },
+  { name: "beach",         file: "24.jpg", def: "this is a place where we can swim in the sea and play in the sand" },
 ];
 
-const data={
-  "cafe":{can:["sit and have a coffee","swim","see animals","study"],cango:["have a drink and a snack","buy medicine","watch films","catch a bus"],areThere:["tables and cups","doctors","books","animals"],facts:{"can you sit and have a coffee there":1,"can you swim there":0,"can you see animals there":0,"do you go there to have a drink and a snack":1,"do you go there to buy medicine":0,"are there tables and cups in this place":1,"are there doctors in this place":0}},
-  "park":{can:["walk and play outside","buy medicine","watch a film","swim indoors"],cango:["enjoy nature and fresh air","see a doctor","borrow books","catch a bus"],areThere:["trees and benches","doctors","books","buses"],facts:{"can you walk and play outside there":1,"can you buy medicine there":0,"do you go there to enjoy nature and fresh air":1,"do you go there to see a doctor":0,"are there trees and benches in this place":1,"are there books in this place":0}},
-  "road":{can:["drive a car","swim","buy food","read books"],cango:["travel by car or bus","see animals","watch films","get help"],areThere:["cars and buses","animals","books","doctors"],facts:{"can you drive a car there":1,"can you swim there":0,"do you go there to travel by car or bus":1,"do you go there to see animals":0,"are there cars and buses in this place":1,"are there animals in this place":0}},
-  "building":{can:["live or work","swim","see wild animals","watch a play"],cango:["live or work","buy fresh food","hike","watch films"],areThere:["flats or offices","wild animals","fish","mountains"],facts:{"can you live or work there":1,"can you swim there":0,"do you go there to live or work":1,"are there flats or offices in this place":1,"are there wild animals in this place":0}},
-  "bank":{can:["change money","swim","see animals","watch films"],cango:["keep and change money","hike","buy food","see a doctor"],areThere:["cashiers and money","animals","books","buses"],facts:{"can you change money there":1,"can you swim there":0,"do you go there to keep and change money":1,"do you go there to hike":0,"are there cashiers and money in this place":1,"are there animals in this place":0}},
-  "bus station":{can:["catch a bus","swim","read books","see animals"],cango:["catch a bus","see a doctor","watch films","buy medicine"],areThere:["buses and timetables","animals","books","doctors"],facts:{"can you catch a bus there":1,"can you swim there":0,"do you go there to catch a bus":1,"do you go there to see a doctor":0,"are there buses and timetables in this place":1,"are there animals in this place":0}},
-  "cinema":{can:["watch films","swim","see animals","buy medicine"],cango:["watch new films and cartoons","hike","catch a bus","get help"],areThere:["a big screen and seats","animals","books","buses"],facts:{"can you watch films there":1,"can you swim there":0,"do you go there to watch new films and cartoons":1,"do you go there to hike":0,"are there a big screen and seats in this place":1,"are there animals in this place":0}},
-  "hospital":{can:["see a doctor","swim","buy food","watch films"],cango:["get help when you are sick","watch films","buy fresh food","hike"],areThere:["doctors and nurses","animals","books","buses"],facts:{"can you see a doctor there":1,"can you swim there":0,"do you go there to get help when you are sick":1,"do you go there to watch films":0,"are there doctors and nurses in this place":1,"are there animals in this place":0}},
-  "library":{can:["read and borrow books","swim","see animals","eat dinner"],cango:["read and borrow books","see a doctor","catch a bus","buy medicine"],areThere:["books and shelves","animals","buses","doctors"],facts:{"can you read and borrow books there":1,"can you swim there":0,"do you go there to read and borrow books":1,"are there books and shelves in this place":1,"are there animals in this place":0}},
-  "market":{can:["buy fresh food","swim","watch films","see animals"],cango:["buy fresh fruit and vegetables","see a doctor","watch films","hike"],areThere:["fruit and vegetable stalls","animals","books","buses"],facts:{"can you buy fresh food there":1,"can you swim there":0,"do you go there to buy fresh fruit and vegetables":1,"are there fruit and vegetable stalls in this place":1,"are there animals in this place":0}},
-  "shop":{can:["buy things","swim","see animals","watch films"],cango:["buy things","see a doctor","hike","catch a bus"],areThere:["things to buy","animals","books","doctors"],facts:{"can you buy things there":1,"can you swim there":0,"do you go there to buy things":1,"do you go there to see a doctor":0,"are there things to buy in this place":1,"are there animals in this place":0}},
-  "sports centre":{can:["play sports and exercise","read books","see animals","watch films"],cango:["play sports and exercise","see a doctor","buy medicine","hike"],areThere:["sports courts and equipment","animals","books","buses"],facts:{"can you play sports and exercise there":1,"can you read books there":0,"do you go there to play sports and exercise":1,"are there sports courts and equipment in this place":1,"are there animals in this place":0}},
-  "supermarket":{can:["buy food and many things","swim","see animals","hike"],cango:["buy food and many things","see a doctor","watch films","catch a bus"],areThere:["food and lots of products","animals","books","buses"],facts:{"can you buy food and many things there":1,"can you swim there":0,"do you go there to buy food and many things":1,"are there food and lots of products in this place":1,"are there animals in this place":0}},
-  "swimming pool":{can:["swim","hike","watch films","buy food"],cango:["learn and practice swimming","see a doctor","buy medicine","catch a bus"],areThere:["water and swimming lanes","animals","books","buses"],facts:{"can you swim there":1,"can you hike there":0,"do you go there to learn and practice swimming":1,"are there water and swimming lanes in this place":1,"are there animals in this place":0}},
-  "zoo":{can:["see wild animals","swim","buy medicine","watch a play"],cango:["see wild animals from different countries","see a doctor","catch a bus","read books"],areThere:["wild animals","books","buses","doctors"],facts:{"can you see wild animals there":1,"can you swim there":0,"do you go there to see wild animals from different countries":1,"are there wild animals in this place":1,"are there books in this place":0}},
-  "school":{can:["study and learn","swim","see animals","buy food"],cango:["study and learn","see a doctor","watch films","hike"],areThere:["classrooms and teachers","animals","buses","doctors"],facts:{"can you study and learn there":1,"can you swim there":0,"do you go there to study and learn":1,"are there classrooms and teachers in this place":1,"are there animals in this place":0}},
-  "bridge":{can:["walk or drive over a river","swim","buy food","read books"],cango:["cross a river","see a doctor","watch films","buy medicine"],areThere:["a road above a river","animals","books","doctors"],facts:{"can you walk or drive over a river there":1,"can you swim there":0,"do you go there to cross a river":1,"are there a road above a river in this place":1,"are there animals in this place":0}},
-  "castle":{can:["see an old building","swim","buy medicine","watch films"],cango:["see where kings and queens lived","buy fresh food","catch a bus","see a doctor"],areThere:["old towers and walls","animals","books","buses"],facts:{"can you see an old building there":1,"can you swim there":0,"do you go there to see where kings and queens lived":1,"are there old towers and walls in this place":1,"are there animals in this place":0}},
-  "museum":{can:["see old and interesting things","swim","buy food","hike"],cango:["see old and interesting things","catch a bus","see a doctor","buy medicine"],areThere:["exhibits and interesting things","animals","buses","doctors"],facts:{"can you see old and interesting things there":1,"can you swim there":0,"do you go there to see old and interesting things":1,"are there exhibits and interesting things in this place":1,"are there animals in this place":0}},
-  "hotel":{can:["sleep and stay","see animals","watch a play","buy medicine"],cango:["stay when you travel","read books","catch a bus","hike"],areThere:["rooms and beds","animals","books","buses"],facts:{"can you sleep and stay there":1,"can you see animals there":0,"do you go there to stay when you travel":1,"are there rooms and beds in this place":1,"are there animals in this place":0}},
-  "restaurant":{can:["eat dinner","swim","see animals","read books"],cango:["eat food and have dinner","see a doctor","hike","catch a bus"],areThere:["tables and a menu","animals","books","buses"],facts:{"can you eat dinner there":1,"can you swim there":0,"do you go there to eat food and have dinner":1,"are there tables and a menu in this place":1,"are there animals in this place":0}},
-  "theatre":{can:["watch actors on a stage","swim","buy food","hike"],cango:["watch a play or show","see a doctor","buy medicine","catch a bus"],areThere:["a stage and seats","animals","books","buses"],facts:{"can you watch actors on a stage there":1,"can you swim there":0,"do you go there to watch a play or show":1,"are there a stage and seats in this place":1,"are there animals in this place":0}},
-  "mountain":{can:["go hiking and climbing","swim","buy medicine","watch films"],cango:["go hiking and climbing","see a doctor","catch a bus","buy medicine"],areThere:["rocks and beautiful views","animals","books","buses"],facts:{"can you go hiking and climbing there":1,"can you swim there":0,"do you go there to go hiking and climbing":1,"are there rocks and beautiful views in this place":1,"are there animals in this place":0}},
-  "beach":{can:["swim in the sea and play in the sand","hike","buy medicine","watch films"],cango:["swim in the sea and relax","see a doctor","catch a bus","read books"],areThere:["sand and the sea","doctors","books","buses"],facts:{"can you swim in the sea and play in the sand there":1,"can you buy medicine there":0,"do you go there to swim in the sea and relax":1,"are there sand and the sea in this place":1,"are there doctors in this place":0}},
-};
+const IMG_PATH = "img/";
+const MAX_TIME = 10;
+const MAX_LIVES = 3;
 
-const structures=[
-  {label:"Can you … there?",      key:"can",      prefix:"Can you",            suffix:"there?"},
-  {label:"Do you go there to … ?",key:"cango",    prefix:"Do you go there to", suffix:"?"},
-  {label:"Are there … in this place?",key:"areThere",prefix:"Are there",       suffix:"in this place?"},
-];
+let queue, current, lives, score, timeLeft, timerInterval, answered, penalty;
 
-let mode=1,lives,score;
-let m1Secret,m1QCount,m1Round,m1Queue,m1SelStr;
-let m2Queue,m2PlaceIdx,m2QIdx,m2Total,m2Correct,m2TimerInterval,m2Answered;
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-const shuffle=a=>[...a].sort(()=>Math.random()-.5);
-const $=id=>document.getElementById(id);
-const fb=(msg,cls)=>{$("feedback").innerHTML=`<span class="${cls}">${msg}</span>`;};
-
-function setLives(n){lives=n;$("lives").textContent="❤️".repeat(Math.max(0,n))+"🖤".repeat(Math.max(0,3-n));}
-function addScore(n){score+=n;$("score").textContent=score;}
-
-function endGame(win,msg){
-  clearInterval(m2TimerInterval);
-  $("otitle").textContent=win?"🎉 Well done!":"💔 Game over!";
-  $("omsg").textContent=msg;
-  $("obtn").onclick=()=>{$("overlay").classList.remove("show");initMode(mode);};
-  $("overlay").classList.add("show");
+function init() {
+  queue = shuffle(places);
+  lives = MAX_LIVES;
+  score = 0;
+  penalty = 0;
+  updateHud();
+  document.getElementById("overlay").classList.remove("show");
+  nextQuestion();
 }
 
-function toggleHelp(){const b=$("help-box");b.style.display=b.style.display==="none"?"":"none";}
-
-function switchMode(n){
-  mode=n;
-  document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("active",i===n-1));
-  $("mode1").style.display=n===1?"":"none";
-  $("mode2").style.display=n===2?"":"none";
-  $("timer-wrap").style.display=n===2?"":"none";
-  initMode(n);
+function updateHud() {
+  document.getElementById("lives").textContent = "❤️".repeat(lives) + "🖤".repeat(MAX_LIVES - lives);
+  document.getElementById("score").textContent = score;
 }
 
-function initMode(n){
-  $("feedback").textContent="";
-  clearInterval(m2TimerInterval);
-  lives=3;score=0;setLives(3);$("score").textContent=0;
-  if(n===1)initMode1();else initMode2();
-}
+function nextQuestion() {
+  if (queue.length === 0) { endGame(true); return; }
+  answered = false;
+  penalty = 0;
+  current = queue.pop();
 
-/* ── MODE 1 ── */
-function initMode1(){m1Queue=shuffle(places);m1Round=0;nextM1();}
+  document.getElementById("definition").textContent = current.def;
+  document.getElementById("feedback").textContent = "";
 
-function nextM1(){
-  if(m1Round>=8){endGame(true,`You finished! Score: ${score}`);return;}
-  m1Round++;
-  m1Secret=m1Queue[m1Round-1];m1QCount=0;m1SelStr=null;
-  $("m1-secret").textContent="🔒";
-  $("m1-history").innerHTML="";
-  $("m1-grid-wrap").style.display="none";
-  $("m1-guess-btn").style.display="";
-  fb("","");
-  renderStructures();renderChips(null);
-}
+  // pick 3 wrong options
+  const others = shuffle(places.filter(p => p.file !== current.file)).slice(0, 3);
+  const opts = shuffle([current, ...others]);
 
-function renderStructures(){
-  const w=$("m1-structures");w.innerHTML="";
-  structures.forEach((s,i)=>{
-    const b=document.createElement("button");
-    b.className="str-btn"+(m1SelStr===i?" selected":"");
-    b.textContent=s.label;
-    b.onclick=()=>{m1SelStr=i;renderStructures();renderChips(i);};
-    w.appendChild(b);
+  const container = document.getElementById("options");
+  container.innerHTML = "";
+  opts.forEach(p => {
+    const btn = document.createElement("div");
+    btn.className = "opt";
+    btn.dataset.file = p.file;
+    const img = document.createElement("img");
+    img.src = IMG_PATH + p.file;
+    img.alt = p.name;
+    const lbl = document.createElement("span");
+    lbl.textContent = p.name;
+    btn.appendChild(img);
+    btn.appendChild(lbl);
+    btn.addEventListener("click", () => handleAnswer(btn, p));
+    container.appendChild(btn);
   });
+
+  startTimer();
 }
 
-function renderChips(si){
-  const w=$("m1-chips");w.innerHTML="";
-  if(si===null)return;
-  const s=structures[si];
-  const d=data[m1Secret.name];
-  shuffle(d[s.key]).forEach(chip=>{
-    const b=document.createElement("div");
-    b.className="chip";b.textContent=chip;
-    b.onclick=()=>askQuestion(si,chip);
-    w.appendChild(b);
-  });
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = MAX_TIME;
+  updateBar();
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      updateBar();
+      clearInterval(timerInterval);
+      if (!answered) timeUp();
+    } else {
+      updateBar();
+    }
+  }, 100);
 }
 
-function askQuestion(si,chip){
-  const s=structures[si];
-  const key=(s.prefix+" "+chip+" "+s.suffix).toLowerCase().replace(/\?/g,"").trim();
-  const d=data[m1Secret.name];
-  let ans=0;
-  for(const[k,v]of Object.entries(d.facts)){if(key.includes(k)){ans=v;break;}}
-  m1QCount++;
-  const q=s.prefix+" <b>"+chip+"</b> "+s.suffix;
-  const a=ans?'<span class="ans-yes">✅ Yes!</span>':'<span class="ans-no">❌ No!</span>';
-  const div=document.createElement("div");div.innerHTML=q+" — "+a;
-  $("m1-history").prepend(div);
-  m1SelStr=null;renderStructures();renderChips(null);
+function updateBar() {
+  const bar = document.getElementById("timer-bar");
+  const pct = (timeLeft / MAX_TIME) * 100;
+  bar.style.width = pct + "%";
+  bar.style.background = pct > 50 ? "#4caf50" : pct > 25 ? "#ff9800" : "#e53935";
 }
 
-function showGuessGrid(){
-  $("m1-grid-wrap").style.display="";
-  $("m1-guess-btn").style.display="none";
-  const others=shuffle(places.filter(p=>p.file!==m1Secret.file)).slice(0,5);
-  const opts=shuffle([m1Secret,...others]);
-  const grid=$("m1-grid");grid.innerHTML="";
-  opts.forEach(p=>{
-    const d=document.createElement("div");d.className="g-opt";d.dataset.file=p.file;
-    const img=document.createElement("img");img.src=IMG+p.file;img.alt=p.name;
-    d.appendChild(img);d.onclick=()=>handleM1Guess(d,p);grid.appendChild(d);
-  });
-}
+function handleAnswer(btn, chosen) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
 
-function handleM1Guess(el,chosen){
-  document.querySelectorAll(".g-opt").forEach(e=>e.onclick=null);
-  $("m1-secret").innerHTML="";
-  const img=document.createElement("img");
-  img.src=IMG+m1Secret.file;img.style.cssText="width:60px;height:60px;object-fit:contain";
-  $("m1-secret").appendChild(img);
-  if(chosen.file===m1Secret.file){
-    el.classList.add("correct");
-    const pts=m1QCount<=3?3:m1QCount<=5?2:1;
-    addScore(pts);fb(`✅ Correct! +${pts} point${pts>1?"s":""}!`,"fb-ok");
-    setTimeout(nextM1,1400);
-  }else{
-    el.classList.add("wrong");
-    document.querySelectorAll(".g-opt").forEach(e=>{if(e.dataset.file===m1Secret.file)e.classList.add("correct");});
-    lives--;setLives(lives);
-    fb(`❌ It was the ${m1Secret.name}!`,"fb-no");
-    if(lives<=0){setTimeout(()=>endGame(false,`Score: ${score}`),1300);return;}
-    setTimeout(nextM1,1500);
+  const correct = chosen.file === current.file;
+  // reveal labels
+  document.querySelectorAll(".opt span").forEach(s => s.style.display = "block");
+
+  if (correct) {
+    btn.classList.add("correct");
+    score++;
+    document.getElementById("feedback").innerHTML = '<span class="fb-correct">✅ Correct!</span>';
+  } else {
+    btn.classList.add("wrong");
+    lives--;
+    // highlight correct
+    document.querySelectorAll(".opt").forEach(b => {
+      if (b.dataset.file === current.file) b.classList.add("reveal");
+    });
+    document.getElementById("feedback").innerHTML = '<span class="fb-wrong">❌ Wrong! It\'s ' + current.name + '</span>';
+    // reduce time for next round
+    penalty = Math.min(penalty + 2, 7);
   }
+
+  updateHud();
+  if (lives <= 0) { setTimeout(() => endGame(false), 1200); return; }
+  setTimeout(() => {
+    MAX_TIME_local = Math.max(3, MAX_TIME - penalty);
+    nextQuestion();
+  }, 1200);
 }
 
-/* ── MODE 2 ── */
-function initMode2(){
-  // build flat shuffled list of {place, structureIdx}
-  m2Queue=shuffle(places.flatMap(p=>shuffle([0,1,2]).map(si=>({place:p,si}))));
-  m2PlaceIdx=0;m2Total=0;m2Correct=0;
-  $("timer-bar").style.width="100%";
-  nextM2Question();
-}
-
-function nextM2Place(){
-  if(m2PlaceIdx>=m2Queue.length){endGame(true,`Score: ${m2Correct} / ${m2Total}`);return;}
-  nextM2Question();
-}
-
-function nextM2Question(){
-  clearInterval(m2TimerInterval);m2Answered=false;
-  if(m2PlaceIdx>=m2Queue.length){endGame(true,`Score: ${m2Correct} / ${m2Total}`);return;}
-  const {place,si}=m2Queue[m2PlaceIdx];
-  const d=data[place.name];
-  const s=structures[si];
-  $("m2-place-img").src=IMG+place.file;
-  $("m2-progress").textContent=`Question ${m2PlaceIdx+1}/${m2Queue.length}`;
-  const correct=d[s.key][0];
-  const wrongs=shuffle(d[s.key].slice(1)).slice(0,3);
-  const opts=shuffle([correct,...wrongs]);
-  $("m2-question").innerHTML=`${s.prefix} <b>___________</b> ${s.suffix}`;
-  const container=$("m2-options");container.innerHTML="";
-  opts.forEach(opt=>{
-    const b=document.createElement("div");b.className="m2-opt";b.textContent=opt;
-    b.onclick=()=>handleM2Answer(b,opt,correct);container.appendChild(b);
+function timeUp() {
+  answered = true;
+  lives--;
+  document.querySelectorAll(".opt span").forEach(s => s.style.display = "block");
+  document.querySelectorAll(".opt").forEach(b => {
+    if (b.dataset.file === current.file) b.classList.add("reveal");
   });
-  fb("","");startM2Timer();
+  document.getElementById("feedback").innerHTML = '<span class="fb-wrong">⏰ Time\'s up! It\'s ' + current.name + '</span>';
+  penalty = Math.min(penalty + 2, 7);
+  updateHud();
+  if (lives <= 0) { setTimeout(() => endGame(false), 1200); return; }
+  setTimeout(nextQuestion, 1400);
 }
 
-function startM2Timer(){
-  let t=15;const bar=$("timer-bar");
-  bar.style.width="100%";bar.style.background="#4caf50";
-  clearInterval(m2TimerInterval);
-  m2TimerInterval=setInterval(()=>{
-    t-=0.1;const pct=(t/15)*100;
-    bar.style.width=pct+"%";
-    bar.style.background=pct>50?"#4caf50":pct>25?"#ff9800":"#e53935";
-    if(t<=0){clearInterval(m2TimerInterval);if(!m2Answered)timeUpM2();}
-  },100);
+function endGame(win) {
+  clearInterval(timerInterval);
+  const ol = document.getElementById("overlay");
+  ol.classList.add("show");
+  document.getElementById("overlay-title").textContent = win ? "🎉 Well done!" : "💔 Game over!";
+  document.getElementById("overlay-msg").textContent = "Your score: " + score + " / " + places.length;
+  document.getElementById("overlay-btn").onclick = init;
 }
 
-function timeUpM2(){
-  m2Answered=true;lives--;setLives(lives);
-  const {place,si}=m2Queue[m2PlaceIdx];
-  const correct=data[place.name][structures[si].key][0];
-  document.querySelectorAll(".m2-opt").forEach(b=>{if(b.textContent===correct)b.classList.add("correct");});
-  fb(`⏰ Time's up! The answer was: ${correct}`,"fb-no");
-  m2Total++;
-  if(lives<=0){setTimeout(()=>endGame(false,`Score: ${m2Correct}/${m2Total}`),1300);return;}
-  advanceM2();
-}
+// penalty carrier across rounds (simple approach)
+let MAX_TIME_local = MAX_TIME;
 
-function handleM2Answer(el,chosen,correct){
-  if(m2Answered)return;m2Answered=true;clearInterval(m2TimerInterval);m2Total++;
-  if(chosen===correct){
-    el.classList.add("correct");m2Correct++;addScore(1);fb("✅ Correct!","fb-ok");
-  }else{
-    el.classList.add("wrong");lives--;setLives(lives);
-    document.querySelectorAll(".m2-opt").forEach(b=>{if(b.textContent===correct)b.classList.add("correct");});
-    fb(`❌ The answer was: ${correct}`,"fb-no");
-    if(lives<=0){setTimeout(()=>endGame(false,`Score: ${m2Correct}/${m2Total}`),1300);return;}
-  }
-  advanceM2();
-}
-
-function advanceM2(){
-  setTimeout(()=>{m2PlaceIdx++;nextM2Question();},1300);
-}
-
-initMode(1);
+init();
 </script>
 </body>
 </html>
